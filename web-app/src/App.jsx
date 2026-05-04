@@ -187,9 +187,42 @@ function App() {
     }
   };
 
+  const [studentWork, setStudentWork] = useState('');
+
   const handleSelectTask = (task) => {
     setSelectedTask(task);
     setMessages([{ role: 'assistant', text: task.aiWelcome || task.ai_welcome }]);
+    setStudentWork('');
+    setView('task-workspace');
+  };
+
+  const handleSubmitWork = async () => {
+    if (!studentWork.trim()) {
+      alert("Алдымен жұмысыңызды жазыңыз немесе сілтемесін қалдырыңыз!");
+      return;
+    }
+    
+    const prompt = `Студенттің орындаған жұмысы: "${studentWork}". Осы жұмысты берілген тапсырмаға ("${selectedTask.title}") сай тексеріп, 100 баллдық жүйемен әділ бағалап, қысқаша кері байланыс (не дұрыс, не бұрыс) бер.`;
+    
+    const newMsgs = [...messages, { role: 'user', text: "Жұмысты тексеруге жібердім." }];
+    setMessages(newMsgs);
+    setIsTyping(true);
+
+    try {
+      const completion = await openai.chat.completions.create({
+        messages: [
+          { role: "system", content: "Сен қатаң, бірақ әділ тәлімгерсің. Жұмысты тексеріп баға қоясың. Қазақ тілінде жауап бер." },
+          { role: "user", content: prompt }
+        ],
+        model: "gpt-4o",
+      });
+      setMessages([...newMsgs, { role: 'assistant', text: completion.choices[0].message.content }]);
+    } catch (error) {
+      console.error("OpenAI Error:", error);
+      setMessages([...newMsgs, { role: 'assistant', text: "ЖИ қатесі: " + error.message }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleSendMessage = async (e) => {
@@ -316,39 +349,61 @@ function App() {
       )}
 
       {view === 'dashboard' && (
-        <div className="dashboard">
-          <div className="tasks-panel">
-            <h2>Ашық тапсырмалар</h2>
+        <div className="landing-page" style={{maxWidth: '1200px'}}>
+          <h2 style={{fontSize: '2.5rem', marginBottom: '2rem'}}>Ашық тапсырмалар тақтасы</h2>
+          <div className="feature-cards">
             {tasks.map(task => (
-              <div key={task.id} className="task-card" onClick={() => handleSelectTask(task)}>
-                <div className="task-header">
+              <div key={task.id} className="glass-card" style={{cursor: 'pointer', textAlign: 'left'}} onClick={() => handleSelectTask(task)}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '1rem'}}>
                   <span className="badge" style={{background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8'}}>{task.category}</span>
-                  <span className="price">{task.price}</span>
+                  <span style={{color: '#10b981', fontWeight: 'bold'}}>{task.price}</span>
                 </div>
-                <h3>{task.title}</h3>
-                <p>{task.desc}</p>
+                <h3 style={{marginBottom: '1rem'}}>{task.title}</h3>
+                <p style={{fontSize: '0.9rem', color: '#cbd5e1'}}>{task.desc?.substring(0, 100)}...</p>
+                <div style={{marginTop: '1.5rem', color: '#c084fc', fontSize: '0.9rem'}}>Толығырақ көру →</div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {view === 'task-workspace' && selectedTask && (
+        <div className="dashboard">
+          <div className="tasks-panel" style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+            <button className="btn btn-outline" style={{alignSelf: 'flex-start'}} onClick={() => setView('dashboard')}>← Артқа қайту</button>
+            <div className="task-header" style={{marginTop: '1rem'}}>
+              <span className="badge" style={{background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8'}}>{selectedTask.category}</span>
+              <span className="price">{selectedTask.price}</span>
+            </div>
+            <h2>{selectedTask.title}</h2>
+            <p style={{color: '#cbd5e1', lineHeight: '1.6'}}>{selectedTask.desc || selectedTask['desc']}</p>
+            
+            <div style={{marginTop: '2rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+              <h3>💻 Жұмыс алаңы</h3>
+              <p style={{fontSize: '0.9rem', color: '#94a3b8'}}>Төмендегі өріске жұмысыңыздың нәтижесін, кодын немесе Google Drive/Figma сілтемесін қалдырыңыз:</p>
+              <textarea 
+                className="form-input" 
+                style={{flex: 1, resize: 'none', fontFamily: 'monospace'}} 
+                placeholder="Мысалы: Мен бұл тапсырманы былай орындадым..."
+                value={studentWork}
+                onChange={e => setStudentWork(e.target.value)}
+              />
+              <button className="btn btn-primary" onClick={handleSubmitWork} disabled={isTyping}>✨ Жұмысты тексеруге жіберу (ЖИ Эвалюатор)</button>
+            </div>
           </div>
 
           <div className="chat-panel">
             <div className="chat-header">🤖 ЖИ-Ассистент {selectedTask ? `- ${selectedTask.title}` : ''}</div>
-            {!selectedTask ? (
-              <div className="empty-chat">Тапсырманы таңдасаңыз, мен оны орындауға көмектесемін.</div>
-            ) : (
-              <>
-                <div className="chat-messages">
-                  {messages.map((m, i) => (
-                    <div key={i} className={`message ${m.role === 'assistant' ? 'msg-ai' : 'msg-user'}`}>{m.text}</div>
-                  ))}
-                  {isTyping && <div className="message msg-ai">Теріп жатыр...</div>}
-                </div>
-                <form className="chat-input" onSubmit={handleSendMessage}>
-                  <input type="text" placeholder="ЖИ-ға хабарлама жазу..." value={inputValue} onChange={e => setInputValue(e.target.value)} />
-                  <button type="submit" className="btn btn-primary" disabled={isTyping}>Жіберу</button>
-                </form>
-              </>
-            )}
+            <div className="chat-messages">
+              {messages.map((m, i) => (
+                <div key={i} className={`message ${m.role === 'assistant' ? 'msg-ai' : 'msg-user'}`}>{m.text}</div>
+              ))}
+              {isTyping && <div className="message msg-ai">Теріп жатыр...</div>}
+            </div>
+            <form className="chat-input" onSubmit={handleSendMessage}>
+              <input type="text" placeholder="Сұрақ қою немесе көмек сұрау..." value={inputValue} onChange={e => setInputValue(e.target.value)} />
+              <button type="submit" className="btn btn-primary" disabled={isTyping}>Жіберу</button>
+            </form>
           </div>
         </div>
       )}
