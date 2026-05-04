@@ -176,11 +176,43 @@ function App() {
       </nav>
 
       {view === 'landing' && (
-        <div className="landing-page">
-          <span className="badge" style={{background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc', marginBottom: '1rem', display: 'inline-block'}}>Жаңа ЖИ мүмкіндігі ✨</span>
-          <h1>Тәжірибе жоқ па? <br/><span className="gradient-text">Оны өзіміз жасаймыз!</span></h1>
-          <button className="btn btn-primary" style={{fontSize: '1.2rem', padding: '1rem 2rem'}} onClick={() => setView('auth')}>Платформаға кіру</button>
-        </div>
+        <main>
+          <section className="hero">
+              <div className="hero-content">
+                  <span className="badge" style={{background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc', marginBottom: '1.5rem', display: 'inline-block'}}>Жаңа ЖИ мүмкіндігі ✨</span>
+                  <h1>Тәжірибе жоқ па? <br/><span className="gradient-text">Оны өзіміз жасаймыз!</span></h1>
+                  <p>ЖИ көмегімен нақты компаниялардың шағын тапсырмаларын орындап, өзіңнің алғашқы цифрлық портфолиоңды жина. Тұйық шеңберді бірге бұзамыз.</p>
+                  <div className="hero-buttons">
+                      <button className="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}} onClick={() => setView('auth')}>Платформаға кіру</button>
+                      <button className="btn btn-outline" style={{fontSize: '1.1rem', padding: '1rem 2rem'}} onClick={() => setView('auth')}>Тіркелу</button>
+                  </div>
+              </div>
+              <div className="hero-image">
+                  <img src="/platform_ui_mockup.png" alt="Platform Interface" className="glass-image" />
+              </div>
+          </section>
+
+          <section className="features">
+              <h2>Платформа қалай жұмыс істейді?</h2>
+              <div className="feature-cards">
+                  <div className="glass-card">
+                      <div className="icon">💼</div>
+                      <h3>1. Тапсырма таңда</h3>
+                      <p>Нақты бизнес иелері қалдырған шынайы тапсырмаларды қарап, өзіңе ұнағанын таңдап ал.</p>
+                  </div>
+                  <div className="glass-card">
+                      <div className="icon">🤖</div>
+                      <h3>2. ЖИ-мен бірге орында</h3>
+                      <p>Платформадағы кіріктірілген AI-ассистент саған тапсырманы орындау барысында көмектеседі.</p>
+                  </div>
+                  <div className="glass-card">
+                      <div className="icon">🚀</div>
+                      <h3>3. Портфолио жина</h3>
+                      <p>Тапсырманы сәтті тапсырған соң, ол сенің цифрлық портфолиоңа қосылады және сен алғашқы табысыңды табасың.</p>
+                  </div>
+              </div>
+          </section>
+        </main>
       )}
 
       {view === 'auth' && (
